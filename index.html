@@ -1,0 +1,307 @@
+<html>
+<head>
+    <meta charset="utf-8">
+    <style>
+        #tableall {
+            font-family:Verdana, Geneva, Tahoma, sans-serif;
+            font-size: 14px;
+            font-weight: bold;
+            color:black;
+        }
+
+        #tableall td {
+            padding:5px 10px;
+            vertical-align: top;
+            cursor:pointer;
+        }
+
+        #MainTable, #numtable, #GuessTable {
+            background-color:burlywood;
+        }
+
+        #MainTable tr td.over {
+            color:coral;
+        }
+        #MainTable tr td.out {
+            background-color:blueviolet;
+        }
+        #MainTable tr td.selected {
+            background-color:aquamarine;
+        }
+
+        #GuessTable tr td.over {
+            color:coral;
+        }
+        #GuessTable tr td.out {
+            background-color:blueviolet;
+        }
+        #GuessTable tr td.selected {
+            background-color:aquamarine;
+        }
+        #GuessTable tr td.inactive {
+            background-color:darkslategray
+        }
+
+        #numtable tr td {
+            background-color:aquamarine;
+        }
+        #numdatatable tr td {
+            text-align: right;
+        }
+    </style>
+    <script>
+        var gnd, maintable, guesstable;
+        
+        function init() { //called first
+            maintable = new MainTable();
+            maintable = new GuessTable();
+            gnd = new GND(10);
+        }
+         
+
+class MainTable {
+   constructor() {
+      this.table = document.getElementById("MainTable");
+      this.rows = this.table.rows;
+      this.setClassName();
+      this.initCells();
+   }
+
+   initCells() {
+      for(let i=0; i<this.rows.length; i++) {
+         let cells = this.rows[i].cells;
+         for(let k=0; k<cells.length; k++) {
+            let cell = cells[k];
+            cell.className = "out";
+            cell.setAttribute("data-selected", "no");
+            cell.addEventListener("mouseover", function() {           
+               this.className = this.className + " " + "over";
+            });
+            cell.addEventListener("mouseout", function() {
+               if(this.getAttribute("data-selected") === "no") {
+                  this.className = "out";
+               } else {
+                  this.className = "selected";
+               }
+            });
+            cell.addEventListener("click", function() {
+               let selected = this.getAttribute("data-selected");
+               for(let i=0; i<this.parentElement.cells.length; i++) {
+                  this.parentElement.cells[i].setAttribute("data-selected", "no");
+                  this.parentElement.cells[i].className = "out";
+               }
+               if(selected === "yes") {
+                  this.setAttribute("data-selected", "no");
+                  this.className = "out over";
+               } else {
+                  this.setAttribute("data-selected", "yes");
+                  this.className = "selected over";
+               }
+            });                
+         }
+      }
+   }
+
+   setClassName(classname = "MainTable") {
+      this.className = classname;
+   }
+}
+
+class GuessTable {
+   constructor() {
+      this.table = document.getElementById("GuessTable");
+      this.rows = this.table.rows;
+      this.setClassName();
+      this.initCells(3);
+
+   }
+
+   initCells(start) {
+      for(let i=0; i<this.rows.length; i++) {
+         let cell = this.rows[i].cells[0];
+
+
+         cell.setAttribute("data-status", "inactive");
+         cell.setAttribute("data-selected", "no");
+         cell.setAttribute("data-value", start);
+         cell.innerText = start++;
+         //cell.className = "inactive";
+
+         cell.className = "out";
+         cell.setAttribute("data-selected", "no");
+         cell.addEventListener("mouseover", function() {           
+            this.className = this.className + " " + "over";
+         });
+         cell.addEventListener("mouseout", function() {
+            if(this.getAttribute("data-selected") === "no") {
+               this.className = "out";
+            } else {
+               this.className = "selected";
+            }
+         });
+         cell.addEventListener("click", function() {
+            let selected = this.getAttribute("data-selected");
+            let rows = this.parentElement.parentElement.rows;
+            for(let i=0; i<rows.length; i++) {
+                rows[i].cells[0].setAttribute("data-selected", "no");
+                rows[i].cells[0].className = "out";
+            }
+            if(selected === "yes") {
+                this.setAttribute("data-selected", "no");
+                this.className = "out over";
+            } else {
+                this.setAttribute("data-selected", "yes");
+                this.className = "selected over";
+            }
+         });
+      }
+   }
+   setClassName(classname = "GuessTable") {
+      this.className = classname;
+   }
+}
+
+class GND { //GetNumData
+
+    constructor(items) {
+        this.num = [];
+        for(let i=0; i<items; i++) {
+            this.num[i] = null;
+        }
+        this.nums = 0;
+        this.guess = null;
+        this.fact = [1,1,2,6,24,120,720,5040,40320,362880,3628800];
+    }
+
+    ReSetGuessTable() {
+        let rows = guesstable.rows;
+        for (let i=0; i<rows.length; i++) {
+            let cell = rows[i].cells[0];
+            let value = cell.getAttribute("data-value");
+            if(value < this.nums) {
+                cell.setAttribute("data-status", "active");
+                cell.className = "out";           
+            } else {
+                cell.setAttribute("data-status", "inactive");
+                cell.className = "inactive";                        
+            }
+        }
+    }
+
+    getMainTableData() {
+        let rows = maintable.rows;
+        let cells;
+        this.nums = 0;
+        for(let i=0; i<rows.length; i++) {
+            this.num[i] = null;
+            cells = rows[i].cells;
+            for(let k=0; k<cells.length; k++) {
+                let cell = rows[i].cells[k];
+                if(cell.getAttribute("data-selected") === "yes") {
+                    this.nums += 1;
+                    this.num[i] = k;
+                }
+            }
+        }
+
+        rows = document.getElementById("numdatatable").rows;
+        for(let i=0; i<rows.length; i++) {
+            rows[i].cells[1].innerText = "";
+        }
+        rows[0].cells[1].innerText = this.nums;
+        for(let i=2; i<=this.nums; i++) {
+            rows[i-1].cells[1].innerText = this.fact[this.nums]/(this.fact[i]*this.fact[this.nums-i]);
+        }
+    }    
+
+    //set guesstable
+    setGuessTable(selected) {
+        let rows = guesstable.rows;
+        for (let i=0; i<rows.length; i++) {
+            let cell = rows[i].cells[0];
+            let value = cell.getAttribute("data-value");
+            cell.setAttribute("data-selected", "no");
+            if(value < this.nums) {
+                cell.setAttribute("data-status", "active");
+                cell.className = "out";                
+            } else {
+                cell.setAttribute("data-status", "inactive");
+                cell.className = "inactive";                        
+            }
+        }
+        selected.setAttribute("data-selected", "yes");
+        selected.className = "selected";
+        this.guess = selected.getAttribute("data-value");
+        document.getElementById("guessnumdiv").innerText = this.guess;
+        //console.log(selected);
+    }
+};
+
+        window.addEventListener("load", init);
+
+    </script>
+</head>
+
+<body>
+    <table id = "tableall">
+        <tr>
+            <td>
+                <table id = "numtable">
+                    <tr><td>01</td></tr>
+                    <tr><td>02</td></tr>
+                    <tr><td>03</td></tr>
+                    <tr><td>04</td></tr>
+                    <tr><td>05</td></tr>
+                    <tr><td>06</td></tr>
+                    <tr><td>07</td></tr>
+                    <tr><td>08</td></tr>
+                    <tr><td>09</td></tr>
+                    <tr><td>10</td></tr>
+                </table>                
+            </td>
+            <td>
+                <table id = "MainTable">
+                    <tr><td>1</td><td>X</td><td>2</td></tr>
+                    <tr><td>1</td><td>X</td><td>2</td></tr>
+                    <tr><td>1</td><td>X</td><td>2</td></tr>
+                    <tr><td>1</td><td>X</td><td>2</td></tr>
+                    <tr><td>1</td><td>X</td><td>2</td></tr>
+                    <tr><td>1</td><td>X</td><td>2</td></tr>
+                    <tr><td>1</td><td>X</td><td>2</td></tr>
+                    <tr><td>1</td><td>X</td><td>2</td></tr>
+                    <tr><td>1</td><td>X</td><td>2</td></tr>
+                    <tr><td>1</td><td>X</td><td>2</td></tr>
+                </table>
+            </td>
+
+            <td>
+                <table id = "GuessTable">
+                    <tr><td></td></tr>
+                    <tr><td></td></tr>
+                    <tr><td></td></tr>
+                    <tr><td></td></tr>
+                    <tr><td></td></tr>
+                    <tr><td></td></tr>
+                    <tr><td></td></tr>
+                </table>
+            </td>
+
+            <td valign = "top">
+                <table id = "numdatatable">
+                    <tr><td>Σύνολο αγώνων: </td><td></td></tr>
+                    <tr><td>Συνδυασμοί 2άδων: </td><td></td></tr>
+                    <tr><td>Συνδυασμοί 3άδων: </td><td></td></tr>
+                    <tr><td>Συνδυασμοί 4άδων: </td><td></td></tr>
+                    <tr><td>Συνδυασμοί 5άδων: </td><td></td></tr>
+                    <tr><td>Συνδυασμοί 6άδων: </td><td></td></tr>
+                    <tr><td>Συνδυασμοί 7άδων: </td><td></td></tr>
+                    <tr><td>Συνδυασμοί 8άδων: </td><td></td></tr>
+                    <tr><td>Συνδυασμοί 9άδων: </td><td></td></tr>
+                    <tr><td>Συνδυασμοί 10άδων: </td><td></td></tr>
+                </table>
+            </td>            
+        </tr>
+    </table>
+    <div id = "guessnumdiv"></div>
+</body>
+</html>
