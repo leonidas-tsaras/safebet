@@ -5,21 +5,18 @@
 
       class Messager {
          constructor () {
-            this.messages = [];
+            this.callback = null;
          }
 
-         subscribe (message, callback) {
-            this.messages.push({message:callback});
-            //this.messages[0].message();
+         subscribe (callback) {
+            this.callback = callback;
          }
 
-         publish (message) {
-            for(let m in this.messages) {
-               this.messages[m].message();
-            }
-
+         publish () {
+            this.callback();
          }
-      }
+      };
+
 
       class Subscriber {
          constructor() {
@@ -59,6 +56,15 @@
 
       var messager = new Messager();
 
+      messager.subscribe(function(){
+            console.log("callback function");
+      });
+
+      messager.publish();
+
+/*
+      var messager = new Messager();
+
       var subscriber = new Subscriber();
       subscriber.subscribe(messager, "test-message");
 
@@ -69,7 +75,7 @@
       //publisher.publish();
 
       messager.publish();
-
+*/
     </script>
 </head>
 

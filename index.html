@@ -53,27 +53,12 @@
         var gnd, maintable, guesstable;
         
         function init() { //called first
-            maintable = new MainTable();
-            maintable = new GuessTable();
             gnd = new GND(10);
+            guesstable = new GuessTable();
+            maintable = new MainTable();
         }
 
-class Messager {
-    constructor () {
-        this.messages = [];
-    }
-
-    publish (message) {
-
-
-    }
-
-    subscribe (message) {
         
-    }
-}
-         
-
 class MainTable {
    constructor() {
       this.table = document.getElementById("MainTable");
@@ -112,13 +97,11 @@ class MainTable {
                   this.setAttribute("data-selected", "yes");
                   this.className = "selected over";
                }
-            });                
+               gnd.getMainTableData();
+               guesstable.resetTable();
+            });
          }
       }
-   }
-
-   setClassName(classname = "MainTable") {
-      this.className = classname;
    }
 }
 
@@ -128,53 +111,75 @@ class GuessTable {
       this.rows = this.table.rows;
       this.setClassName();
       this.initCells(3);
-
    }
 
-   initCells(start) {
-      for(let i=0; i<this.rows.length; i++) {
-         let cell = this.rows[i].cells[0];
-
-
-         cell.setAttribute("data-status", "inactive");
-         cell.setAttribute("data-selected", "no");
-         cell.setAttribute("data-value", start);
-         cell.innerText = start++;
-         //cell.className = "inactive";
-
-         cell.className = "out";
-         cell.setAttribute("data-selected", "no");
-         cell.addEventListener("mouseover", function() {           
-            this.className = this.className + " " + "over";
-         });
-         cell.addEventListener("mouseout", function() {
-            if(this.getAttribute("data-selected") === "no") {
-               this.className = "out";
+    resetTable(selectedCell) {
+        if(!selectedCell) {
+            selectedCell = this.getSelected();
+        }
+        let rows = document.getElementById("GuessTable").rows;
+        let nums = gnd.nums;
+        for (let i=0; i<rows.length; i++) {
+            let cell = rows[i].cells[0];
+            cell.setAttribute("data-selected", "no");
+            let value = cell.getAttribute("data-value");
+            if(value < nums) { // this.nums
+                cell.setAttribute("data-status", "active");
+                cell.className = "out";
             } else {
-               this.className = "selected";
+                cell.setAttribute("data-status", "inactive");
+                cell.className = "inactive"; 
             }
-         });
-         cell.addEventListener("click", function() {
-            let selected = this.getAttribute("data-selected");
-            let rows = this.parentElement.parentElement.rows;
-            for(let i=0; i<rows.length; i++) {
-                rows[i].cells[0].setAttribute("data-selected", "no");
-                rows[i].cells[0].className = "out";
+        }
+
+        this.setSelected(selectedCell);
+    }
+
+    setSelected(selectedCell) {
+        if(selectedCell) {
+            if(selectedCell.getAttribute("data-status") === "active") {
+                selectedCell.setAttribute("data-selected", "yes");
+                selectedCell.className = "selected over";
             }
-            if(selected === "yes") {
-                this.setAttribute("data-selected", "no");
-                this.className = "out over";
-            } else {
-                this.setAttribute("data-selected", "yes");
-                this.className = "selected over";
-            }
-         });
-      }
+        }
+    }
+
+    getSelected() {
+        for (let i=0; i<this.rows.length; i++) {
+            let cell = this.rows[i].cells[0]; 
+            if(cell.getAttribute("data-selected") === "yes")
+                return cell;
+        }
+    }
+
+    initCells(start) {
+        for(let i=0; i<this.rows.length; i++) {
+            let cell = this.rows[i].cells[0];
+
+            var self = this;
+
+            self.resetTable();
+            cell.setAttribute("data-value", start);
+            cell.innerText = start++;
+
+            cell.addEventListener("mouseover", function() {
+                if(this.getAttribute("data-status") === "active") {
+                    if(this.getAttribute("data-selected") === "no")
+                        this.classList.toggle("over");
+                }
+            });
+            cell.addEventListener("mouseout", function() {
+                if(this.getAttribute("data-status") === "active") {
+                    if(this.getAttribute("data-selected") === "no")
+                        this.classList.toggle("over");                
+                }
+            });
+            cell.addEventListener("click", function() {
+                self.resetTable(this);
+            });
+        }
    }
-   setClassName(classname = "GuessTable") {
-      this.className = classname;
-   }
-}
+} //end of class
 
 class GND { //GetNumData
 
@@ -186,21 +191,6 @@ class GND { //GetNumData
         this.nums = 0;
         this.guess = null;
         this.fact = [1,1,2,6,24,120,720,5040,40320,362880,3628800];
-    }
-
-    ReSetGuessTable() {
-        let rows = guesstable.rows;
-        for (let i=0; i<rows.length; i++) {
-            let cell = rows[i].cells[0];
-            let value = cell.getAttribute("data-value");
-            if(value < this.nums) {
-                cell.setAttribute("data-status", "active");
-                cell.className = "out";           
-            } else {
-                cell.setAttribute("data-status", "inactive");
-                cell.className = "inactive";                        
-            }
-        }
     }
 
     getMainTableData() {
@@ -228,28 +218,6 @@ class GND { //GetNumData
             rows[i-1].cells[1].innerText = this.fact[this.nums]/(this.fact[i]*this.fact[this.nums-i]);
         }
     }    
-
-    //set guesstable
-    setGuessTable(selected) {
-        let rows = guesstable.rows;
-        for (let i=0; i<rows.length; i++) {
-            let cell = rows[i].cells[0];
-            let value = cell.getAttribute("data-value");
-            cell.setAttribute("data-selected", "no");
-            if(value < this.nums) {
-                cell.setAttribute("data-status", "active");
-                cell.className = "out";                
-            } else {
-                cell.setAttribute("data-status", "inactive");
-                cell.className = "inactive";                        
-            }
-        }
-        selected.setAttribute("data-selected", "yes");
-        selected.className = "selected";
-        this.guess = selected.getAttribute("data-value");
-        document.getElementById("guessnumdiv").innerText = this.guess;
-        //console.log(selected);
-    }
 };
 
         window.addEventListener("load", init);
