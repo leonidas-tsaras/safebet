@@ -11,8 +11,9 @@
 
         #tableall td {
             padding:5px 10px;
-            vertical-align: top;
+            vertical-align:top;
             cursor:pointer;
+            user-select:none;
         }
 
         #MainTable, #numtable, #GuessTable {
@@ -54,35 +55,93 @@
         
         function init() { //called first
             maintable = new MainTable();
-            maintable = new GuessTable();
+            guesstable = new GuessTable();
             gnd = new GND(10);
         }
-
-class Messager {
-    constructor () {
-        this.messages = [];
-    }
-
-    publish (message) {
-
-
-    }
-
-    subscribe (message) {
-        
-    }
-}
-         
 
 class MainTable {
    constructor() {
       this.table = document.getElementById("MainTable");
       this.rows = this.table.rows;
+      this.nums = 0;
+      this.num = [];
+      this.initNums();
       this.setClassName();
       this.initCells();
+    }
+
+    initNums() {
+        for(let i=0; i<this.rows.length; i++) {
+            let cells = this.rows[i].cells;
+            for(let k=0; k<cells.length; k++) {
+                this.num[[i,k]] = 0;
+            }
+        }
+        this.nums = 0;
+    }
+
+
+
+    setCells() {
+        for(let i=0; i<this.rows.length; i++) {
+            let cells = this.rows[i].cells;
+            for(let k=0; k<cells.length; k++) {
+                this.num[i][k] = 0;
+            }
+        }        
+    }
+
+    getCellData(cell) {
+        let data = {};
+        data.rowIndex = parseInt(cell.getAttribute("data-rowIndex"));
+        data.colIndex = parseInt(cell.getAttribute("data-colIndex"));
+        data.selected = parseInt(cell.getAttribute("data-selected"));
+        return data;
+    }
+
+    setCellData(cell, data) {
+        cell.setAttribute("data-rowIndex", data.rowIndex);
+        cell.setAttribute("data-colIndex", data.colIndex);
+        cell.setAttribute("data-selected", data.selected);
+    }
+
+    initCells() {
+        let self = this;
+        for(let i=0; i<this.rows.length; i++) {
+         let cells = this.rows[i].cells;
+         for(let k=0; k<cells.length; k++) {
+            let cell = cells[k];
+            this.setCellData(cell, {rowIndex:i, colIndex:k, selected:0});
+            cell.className = "out";
+            cell.addEventListener("mouseover", function() {
+                this.classList.toggle("over");
+            });
+            cell.addEventListener("mouseout", function() {
+                this.classList.toggle("over");
+            });
+            cell.addEventListener("click", function() {
+                let selected = this.getAttribute("data-selected");
+                let row = self.rows[parseInt(this.getAttribute("data-rowIndex"))];
+                let cells = row.cells;
+                for(let i=0; i<cells.length; i++) {
+                    cells[i].setAttribute("data-selected", 0);
+                    cells[i].className = "out";
+                }
+
+                if(parseInt(selected)) {
+                    this.setAttribute("data-selected", 0);
+                    this.className = "out over";                    
+                } else {
+                    this.setAttribute("data-selected", 1);
+                    this.className = "selected over";                    
+                }
+            });                
+         }
+      }
    }
 
-   initCells() {
+/*
+    initCells_() {
       for(let i=0; i<this.rows.length; i++) {
          let cells = this.rows[i].cells;
          for(let k=0; k<cells.length; k++) {
@@ -116,7 +175,7 @@ class MainTable {
          }
       }
    }
-
+*/
    setClassName(classname = "MainTable") {
       this.className = classname;
    }
