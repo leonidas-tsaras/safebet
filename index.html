@@ -6,24 +6,19 @@
             font-family:Verdana, Geneva, Tahoma, sans-serif;
             font-size: 14px;
             font-weight: bold;
-            color:black;
         }
 
         #tableall td {
             padding:5px 10px;
-            vertical-align:top;
             cursor:pointer;
-            -webkit-user-select: none;  /* Chrome all / Safari all */
-            -moz-user-select: none;     /* Firefox all */
-            -ms-user-select: none;      /* IE 10+ */
-            user-select: none;          /* Likely future */  
         }
 
-        #MainTable, #numtable, #GuessTable {
+        #MainTable, #numtable, #guesstable {
             background-color:burlywood;
         }
 
         #MainTable tr td.over {
+            background-color:blueviolet;
             color:coral;
         }
         #MainTable tr td.out {
@@ -33,209 +28,148 @@
             background-color:aquamarine;
         }
 
-        #GuessTable tr td.over {
-            color:coral;
-        }
-        #GuessTable tr td.out {
+        #guesstable tr td {
             background-color:blueviolet;
         }
-        #GuessTable tr td.selected {
+        #guesstable tr td.over {
+            background-color:blueviolet;
+            color:coral;
+        }
+        #guesstable tr td.out {
+            background-color:blueviolet;
+        }
+        #guesstable tr td.selected {
             background-color:aquamarine;
         }
-        #GuessTable tr td.inactive {
+        #guesstable tr td.inactive {
             background-color:darkslategray
         }
 
         #numtable tr td {
             background-color:aquamarine;
         }
+
         #numdatatable tr td {
             text-align: right;
         }
     </style>
     <script>
-        var gnd, maintable, guesstable;
+        var gnd;
+        var maintable, guesstable;
         
         function init() { //called first
-            maintable = new MainTable();
-            guesstable = new GuessTable();
+            maintable = document.getElementById("MainTable");
+            maintable = document.getElementById("MainTable");
+            guesstable = document.getElementById("guesstable");
             gnd = new GND(10);
-        }
+            let rows, cells, cell;
+
+            //initialize maintable
+            rows = maintable.rows;
+            for(let i=0; i<rows.length; i++) {
+                cells = rows[i].cells;
+                for(let k=0; k<cells.length; k++) {
+                    cell = rows[i].cells[k];
+                    cell.setAttribute("data-selected", "no");
+                    cell.className = "out";
+                    cell.addEventListener("mouseover", function() {
+                        if(this.getAttribute("data-selected") === "no") {
+                            this.className = "over";
+                        }
+                    });
+                    cell.addEventListener("mouseout", function() {
+                        if(this.getAttribute("data-selected") === "no") {
+                            this.className = "out";
+                        }
+                    });
+
+                    cell.addEventListener("click", function() {
+                        //gnd.setMainTable(this);
+                        let selected = this.getAttribute("data-selected");
+                        let parent  = this.parentNode;
+                        let cells = parent.cells;
+                        for (let i=0; i<cells.length; i++) {
+                            cells[i].setAttribute("data-selected", "no");
+                            cells[i].className = "out";
+                        }
+                        if(selected === "yes") {
+                            this.setAttribute("data-selected", "no");
+                            this.className = "over";
+                        } else {
+                            this.setAttribute("data-selected", "yes");
+                            this.className = "selected";
+                        }
+                        gnd.getMainTableData();
+                        gnd.ReSetGuessTable();
+                    });
+                }
+            }
+            //data.fact[rows.length] = getFactorial(rows.length);
+
+            //initialize guesstable
+            rows = guesstable.rows;
+            let start = 3;
+            for(let i=0; i<rows.length; i++) {
+                cell = rows[i].cells[0];
+                cell.setAttribute("data-status", "inactive");
+                cell.setAttribute("data-selected", "no");
+                cell.setAttribute("data-value", start);
+                cell.innerText = start++;
+                cell.className = "inactive";
+                cell.addEventListener("mouseover", function() {
+                    if(this.getAttribute("data-status") === "active") {
+                        if(this.getAttribute("data-selected") === "no") {
+                            this.className = "over";
+                        }
+                    }
+                });
+                cell.addEventListener("mouseout", function() {
+                    if(this.getAttribute("data-status") === "active") {
+                        if(this.getAttribute("data-selected") === "no") {
+                            this.className = "out";
+                        }
+                    }
+                });
+                cell.addEventListener("click", function() {
+                    if(this.getAttribute("data-status") === "inactive") {
+                        alert("oops\nΗ επιλογή πρέπει να είναι μικρότερη \nαπό το σύνολο αγώνων που έχετε επιλέξει");
+                        return;
+                    }
+                    gnd.setGuessTable(this);
+                });
+            }
+        } //init end
 
 class MainTable {
-   constructor() {
-      this.table = document.getElementById("MainTable");
-      this.rows = this.table.rows;
-      this.nums = 0;
-      this.num = [];
-      this.initNums();
-      this.setClassName();
-      this.initCells();
-    }
-
-    initNums() {
-        for(let i=0; i<this.rows.length; i++) {
-            let cells = this.rows[i].cells;
-            for(let k=0; k<cells.length; k++) {
-                this.num[[i,k]] = 0;
-            }
-        }
-        this.nums = 0;
-    }
-
-
-
-    setCells() {
-        for(let i=0; i<this.rows.length; i++) {
-            let cells = this.rows[i].cells;
-            for(let k=0; k<cells.length; k++) {
-                this.num[i][k] = 0;
-            }
-        }        
-    }
-
-    getCellData(cell) {
-        let data = {};
-        data.rowIndex = parseInt(cell.getAttribute("data-rowIndex"));
-        data.colIndex = parseInt(cell.getAttribute("data-colIndex"));
-        data.selected = parseInt(cell.getAttribute("data-selected"));
-        return data;
-    }
-
-    setCellData(cell, data) {
-        cell.setAttribute("data-rowIndex", data.rowIndex);
-        cell.setAttribute("data-colIndex", data.colIndex);
-        cell.setAttribute("data-selected", data.selected);
+    constructor() {
+        this.table = document.getElementById("MainTable");
+        this.rows = table.rows;
+        setClassName();
+        initCells();
     }
 
     initCells() {
-        let self = this;
         for(let i=0; i<this.rows.length; i++) {
-         let cells = this.rows[i].cells;
-         for(let k=0; k<cells.length; k++) {
-            let cell = cells[k];
-            this.setCellData(cell, {rowIndex:i, colIndex:k, selected:0});
-            cell.className = "out";
-            cell.addEventListener("mouseover", function() {
-                this.classList.toggle("over");
-            });
-            cell.addEventListener("mouseout", function() {
-                this.classList.toggle("over");
-            });
-            cell.addEventListener("click", function() {
-                let selected = this.getAttribute("data-selected");
-                let row = self.rows[parseInt(this.getAttribute("data-rowIndex"))];
-                let cells = row.cells;
-                for(let i=0; i<cells.length; i++) {
-                    cells[i].setAttribute("data-selected", 0);
-                    cells[i].className = "out";
-                }
-
-                if(parseInt(selected)) {
-                    this.setAttribute("data-selected", 0);
-                    this.className = "out over";                    
-                } else {
-                    this.setAttribute("data-selected", 1);
-                    this.className = "selected over";                    
-                }
-            });                
-         }
-      }
-   }
-
-/*
-    initCells_() {
-      for(let i=0; i<this.rows.length; i++) {
-         let cells = this.rows[i].cells;
-         for(let k=0; k<cells.length; k++) {
-            let cell = cells[k];
-            cell.className = "out";
-            cell.setAttribute("data-selected", "no");
-            cell.addEventListener("mouseover", function() {           
-               this.className = this.className + " " + "over";
-            });
-            cell.addEventListener("mouseout", function() {
-               if(this.getAttribute("data-selected") === "no") {
-                  this.className = "out";
-               } else {
-                  this.className = "selected";
-               }
-            });
-            cell.addEventListener("click", function() {
-               let selected = this.getAttribute("data-selected");
-               for(let i=0; i<this.parentElement.cells.length; i++) {
-                  this.parentElement.cells[i].setAttribute("data-selected", "no");
-                  this.parentElement.cells[i].className = "out";
-               }
-               if(selected === "yes") {
-                  this.setAttribute("data-selected", "no");
-                  this.className = "out over";
-               } else {
-                  this.setAttribute("data-selected", "yes");
-                  this.className = "selected over";
-               }
-            });                
-         }
-      }
-   }
-*/
-   setClassName(classname = "MainTable") {
-      this.className = classname;
-   }
-}
-
-class GuessTable {
-   constructor() {
-      this.table = document.getElementById("GuessTable");
-      this.rows = this.table.rows;
-      this.setClassName();
-      this.initCells(3);
-
-   }
-
-   initCells(start) {
-      for(let i=0; i<this.rows.length; i++) {
-         let cell = this.rows[i].cells[0];
-
-
-         cell.setAttribute("data-status", "inactive");
-         cell.setAttribute("data-selected", "no");
-         cell.setAttribute("data-value", start);
-         cell.innerText = start++;
-         //cell.className = "inactive";
-
-         cell.className = "out";
-         cell.setAttribute("data-selected", "no");
-         cell.addEventListener("mouseover", function() {           
-            this.className = this.className + " " + "over";
-         });
-         cell.addEventListener("mouseout", function() {
-            if(this.getAttribute("data-selected") === "no") {
-               this.className = "out";
-            } else {
-               this.className = "selected";
+            let cells = this.rows[i];
+            for(let k=0; k<cells.length; k++) {
+                let cell = cells[k];
+                cell.setAttribute("data-selected", "no");
+                cell.addEventListener("mouseover", function() {
+                    this.className = "over";
+                });
+                cell.addEventListener("mouseout", function() {
+                    this.className = "out";
+                });
+                cell.addEventListener("click", function() {
+                    this.className = "selected";
+                });                
             }
-         });
-         cell.addEventListener("click", function() {
-            let selected = this.getAttribute("data-selected");
-            let rows = this.parentElement.parentElement.rows;
-            for(let i=0; i<rows.length; i++) {
-                rows[i].cells[0].setAttribute("data-selected", "no");
-                rows[i].cells[0].className = "out";
-            }
-            if(selected === "yes") {
-                this.setAttribute("data-selected", "no");
-                this.className = "out over";
-            } else {
-                this.setAttribute("data-selected", "yes");
-                this.className = "selected over";
-            }
-         });
-      }
-   }
-   setClassName(classname = "GuessTable") {
-      this.className = classname;
-   }
+        }
+    }
+
+    setClassName(classname = "MainTable") {
+        this.className = classname;
+    }
 }
 
 class GND { //GetNumData
@@ -352,7 +286,7 @@ class GND { //GetNumData
             </td>
 
             <td>
-                <table id = "GuessTable">
+                <table id = "guesstable">
                     <tr><td></td></tr>
                     <tr><td></td></tr>
                     <tr><td></td></tr>
